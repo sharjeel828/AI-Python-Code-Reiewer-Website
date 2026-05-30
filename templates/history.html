@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+
+{% block title %}History - AI Code Reviewer{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Submission History</h1>
+    <p class="subtitle">Review your past code analyses and track improvements over time.</p>
+</div>
+
+<div class="glass-card">
+    {% if submissions %}
+    <div class="table-responsive">
+        <table class="history-table">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>File / Source</th>
+                    <th>Preview</th>
+                    <th>Risk Score</th>
+                    <th>Issues</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for submission in submissions %}
+                <tr>
+                    <td>{{ submission.SubmissionDate.strftime('%Y-%m-%d %H:%M') }}</td>
+                    <td><strong>{{ submission.FileName }}</strong></td>
+                    <td><code class="text-xs text-muted">{{ submission.SourceCode | truncate(30) }}</code></td>
+
+                    {% if submission.report %}
+                    <td>
+                        {% set risk = (submission.report.Metrics or {}).get('risk_score', 0) %}
+                        <span
+                            class="badge {% if risk > 50 %}badge-error{% elif risk > 20 %}badge-warning{% else %}badge-success{% endif %}">
+                            {{ risk }}
+                        </span>
+                    </td>
+                    <td>{{ submission.report.DetectedIssues|length }}</td>
+                    <td>
+                        <a href="{{ url_for('view_report', report_id=submission.report.ReportID) }}"
+                            class="btn btn-outline btn-sm">View Report</a>
+                    </td>
+                    {% else %}
+                    <td colspan="2" class="text-muted">Analysis pending or failed</td>
+                    <td>-</td>
+                    {% endif %}
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="empty-state text-center p-5">
+        <div class="icon-circle mx-auto mb-3" style="width: 80px; height: 80px; font-size: 2.5rem;"><i
+                class="ph ph-folder-open"></i></div>
+        <h3>No history yet</h3>
+        <p class="mb-4">You haven't analyzed any code yet. Submit your first Python script to get started.</p>
+        <a href="{{ url_for('index') }}" class="btn btn-primary">Submit Code</a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

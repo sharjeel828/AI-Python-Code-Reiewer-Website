@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+
+{% block title %}Sign Up - AI Code Reviewer{% endblock %}
+
+{% block content %}
+<div class="auth-wrapper">
+    <div class="glass-card auth-card">
+        <div class="auth-header">
+            <h2>Create an Account</h2>
+            <p>Join to start analyzing your Python code.</p>
+        </div>
+
+        <form action="{{ url_for('register') }}" method="POST" class="auth-form">
+            <div class="form-group">
+                <label for="name">Full Name</label>
+                <div class="input-with-icon">
+                    <i class="ph ph-user"></i>
+                    <input type="text" id="name" name="name" required placeholder="Jane Doe">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="email">Email Address</label>
+                <div class="input-with-icon">
+                    <i class="ph ph-envelope"></i>
+                    <input type="email" id="email" name="email" required placeholder="you@example.com">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="password">Password</label>
+                <div class="input-with-icon">
+                    <i class="ph ph-lock-key"></i>
+                    <input type="password" id="password" name="password" required minlength="8"
+                        placeholder="At least 8 characters">
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary btn-block btn-large mt-4">Create Account</button>
+        </form>
+
+        <p class="auth-footer">
+            Already have an account? <a href="{{ url_for('login') }}" class="text-link">Log in</a>
+        </p>
+    </div>
+</div>
+{% endblock %}

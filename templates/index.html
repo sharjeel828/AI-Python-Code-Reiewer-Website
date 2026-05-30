@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard - AI Code Reviewer{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <h1>Submit Python Code</h1>
+    <p class="subtitle">Our AI and static analysis engines will review your code for bugs, style issues, and technical debt.</p>
+</div>
+
+<div class="submission-container">
+    <div class="glass-card">
+        <form action="{{ url_for('index') }}" method="POST" enctype="multipart/form-data" id="submission-form">
+            
+            <div class="tabs">
+                <button type="button" class="tab-btn active" data-target="paste-tab"><i class="ph ph-keyboard"></i> Paste Code</button>
+                <button type="button" class="tab-btn" data-target="upload-tab"><i class="ph ph-upload-simple"></i> Upload File</button>
+            </div>
+            
+            <div class="tab-content active" id="paste-tab">
+                <div class="form-group">
+                    <label for="code_text" class="sr-only">Python Code</label>
+                    <div class="editor-wrapper">
+                        <textarea name="code_text" id="code_text" class="code-editor" placeholder="# Paste your Python code here...&#10;def hello_world():&#10;    print('Hello World!')" spellcheck="false"></textarea>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="tab-content" id="upload-tab">
+                <div class="form-group file-upload-group">
+                    <div class="file-drop-area" id="file-drop-area">
+                        <i class="ph ph-file-code"></i>
+                        <h3>Drag & Drop your Python file here</h3>
+                        <p>or</p>
+                        <label for="code_file" class="btn btn-outline">Browse Files</label>
+                        <input type="file" name="code_file" id="code_file" accept=".py,.ipynb,.pyw,.pyi" class="file-input">
+                        <p class="file-name" id="file-name-display">No file selected (.py, .ipynb, .pyi, .pyw)</p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary btn-large btn-glow" id="analyze-btn">
+                    <i class="ph ph-magic-wand"></i> Analyze Code
+                </button>
+            </div>
+        </form>
+    </div>
+    
+    <div class="features-grid">
+        <div class="feature-card">
+            <div class="icon-circle"><i class="ph ph-bug"></i></div>
+            <h4>Bug Detection</h4>
+            <p>Identifies logical errors, syntax issues, and potential runtime crashes.</p>
+        </div>
+        <div class="feature-card">
+            <div class="icon-circle"><i class="ph ph-swatches"></i></div>
+            <h4>Style Consistency</h4>
+            <p>Ensures your code follows PEP 8 standards and best practices.</p>
+        </div>
+        <div class="feature-card">
+            <div class="icon-circle"><i class="ph ph-chart-line-up"></i></div>
+            <h4>Complexity Metrics</h4>
+            <p>Analyzes cyclomatic complexity, depth, and structural health.</p>
+        </div>
+    </div>
+</div>
+{% endblock %}

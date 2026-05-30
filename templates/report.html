@@ -1,0 +1,181 @@
+{% extends 'base.html' %}
+
+{% block title %}Report - AI Code Reviewer{% endblock %}
+
+{% block content %}
+<div class="report-header">
+    <div class="title-section">
+        <h1>Analysis Report #{{ report.ReportID }}</h1>
+        <p class="subtitle">File: <strong>{{ report.submission.FileName }}</strong> | Submitted: {{
+            report.submission.SubmissionDate.strftime('%Y-%m-%d %H:%M') }}</p>
+    </div>
+    <div class="actions-section">
+        <a href="{{ url_for('index') }}" class="btn btn-outline"><i class="ph ph-arrow-left"></i> New Analysis</a>
+        <button class="btn btn-primary" onclick="window.print()"><i class="ph ph-printer"></i> Print / Save PDF</button>
+    </div>
+</div>
+
+{% set issues = report.DetectedIssues or [] %}
+{% set metrics = report.Metrics or {} %}
+{% set suggestions = report.Suggestions or [] %}
+
+<div class="dashboard-grid">
+    <!-- Summary Cards -->
+    <div class="summary-cards">
+        <div
+            class="stat-card {% if metrics.get('risk_score', 0) > 50 %}danger{% elif metrics.get('risk_score', 0) > 20 %}warning{% else %}success{% endif %}">
+            <div class="stat-header">
+                <i class="ph ph-shield-warning"></i>
+                <span>Risk Score</span>
+            </div>
+            <div class="stat-value">{{ metrics.get('risk_score', 0) }}<span class="text-sm">/100</span></div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-header">
+                <i class="ph ph-warning-octagon"></i>
+                <span>Issues Found</span>
+            </div>
+            <div class="stat-value">{{ issues|length }}</div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-header">
+                <i class="ph ph-git-branch"></i>
+                <span>Cyclomatic Complexity</span>
+            </div>
+            <div class="stat-value">{{ metrics.get('cyclomatic_complexity', 0) }}</div>
+        </div>
+    </div>
+
+    <div class="report-main">
+        <!-- AI Suggestions -->
+        <div class="glass-card mb-4 section-card">
+            <div class="card-header">
+                <h3><i class="ph ph-lightbulb text-primary"></i> AI Recommendations</h3>
+            </div>
+            <div class="card-body">
+                {% if suggestions %}
+                <ul class="suggestion-list">
+                    {% for suggestion in suggestions %}
+                    <li>{{ suggestion }}</li>
+                    {% endfor %}
+                </ul>
+                {% else %}
+                <p class="text-muted">No specific refactoring suggestions generated.</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Issue List -->
+        <div class="glass-card section-card">
+            <div class="card-header">
+                <h3><i class="ph ph-bug text-primary"></i> Detailed Findings</h3>
+            </div>
+            <div class="card-body p-0">
+                {% if issues %}
+                <div class="table-responsive">
+                    <table class="issue-table">
+                        <thead>
+                            <tr>
+                                <th>Severity</th>
+                                <th>Line</th>
+                                <th>Type</th>
+                                <th>Message</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for issue in issues %}
+                            <tr class="severity-{{ issue.severity | default('info') }}">
+                                <td>
+                                    <span class="badge badge-{{ issue.severity | default('info') }}">
+                                        {{ issue.severity | default('Info') | title }}
+                                    </span>
+                                </td>
+                                <td>Line {{ issue.line | default('-') }}</td>
+                                <td><strong>{{ issue.rule_id | default(issue.type) }}</strong></td>
+                                <td>{{ issue.message }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="empty-state">
+                    <i class="ph ph-check-circle text-success" style="font-size: 3rem; margin-bottom: 1rem;"></i>
+                    <h4>No issues detected!</h4>
+                    <p>Your code looks great and follows best practices.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Corrected Code / Suggested Fix -->
+        {% if report.CorrectedCode %}
+        <div class="glass-card section-card mt-4" style="margin-top: 2rem; margin-bottom: 2rem; padding: 1.5rem;">
+            <div class="card-header" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--card-border); padding-bottom: 1rem; margin-bottom: 1rem;">
+                <h3 style="margin: 0;"><i class="ph ph-magic-wand text-success"></i> Auto-Corrected Code</h3>
+                <button class="btn btn-primary btn-sm copy-btn" onclick="copyAutoCorrectCode()" style="display: flex; align-items: center; gap: 0.5rem; font-weight: 500;">
+                    <i class="ph ph-copy"></i> Copy Code
+                </button>
+            </div>
+            <div class="card-body p-0" style="background: var(--bg-secondary); border-radius: 8px; border: 1px solid var(--card-border);">
+                <div class="code-compare-container" style="padding: 1rem;">
+                    <pre style="margin: 0; background: transparent; padding: 0;"><code class="language-python" id="corrected-code-block" style="overflow-x: auto; white-space: pre-wrap; font-family: 'JetBrains Mono', monospace; font-size: 0.95rem; color: #a5d6ff; display: block;">{{ report.CorrectedCode }}</code></pre>
+                </div>
+            </div>
+        </div>
+        <script>
+            function copyAutoCorrectCode() {
+                const codeText = document.getElementById('corrected-code-block').innerText;
+                navigator.clipboard.writeText(codeText).then(() => {
+                    const btn = document.querySelector('.copy-btn');
+                    const originalHTML = btn.innerHTML;
+                    btn.innerHTML = '<i class="ph ph-check"></i> Copied!';
+                    setTimeout(() => {
+                        btn.innerHTML = originalHTML;
+                    }, 2000);
+                });
+            }
+        </script>
+        {% endif %}
+    </div>
+
+    <div class="report-sidebar">
+        <!-- Advanced Metrics -->
+        <div class="glass-card section-card">
+            <div class="card-header">
+                <h3><i class="ph ph-chart-bar text-primary"></i> Code Metrics</h3>
+            </div>
+            <div class="card-body">
+                <ul class="metrics-list">
+                    <li>
+                        <span class="metric-label">Functions Defined</span>
+                        <span class="metric-value">{{ metrics.get('num_functions', 0) }}</span>
+                    </li>
+                    <li>
+                        <span class="metric-label">Total Loops</span>
+                        <span class="metric-value">{{ metrics.get('num_loops', 0) }}</span>
+                    </li>
+                    <li>
+                        <span class="metric-label">Max Nesting Depth</span>
+                        <span
+                            class="metric-value {% if (metrics.get('depth_of_nested_blocks', 0) | int) > 4 %}text-danger{% endif %}">{{
+                            metrics.get('depth_of_nested_blocks', 0) }}</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Source Code Snippet -->
+        <div class="glass-card section-card mt-4 code-sidebar">
+            <div class="card-header">
+                <h3><i class="ph ph-code text-primary"></i> Source Snippet</h3>
+            </div>
+            <div class="card-body p-0">
+                <pre><code class="language-python">{{ report.submission.SourceCode | truncate(500) }}</code></pre>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
